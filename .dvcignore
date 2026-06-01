@@ -1,0 +1,43 @@
+# DVC ignore patterns
+.git
+.hg
+.gitignore
+.github
+.dvc/.gitignore
+.dvc/tmp
+.dvc/cache
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# System
+.DS_Store
+.DS_Store?
+*.swp
+*~
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

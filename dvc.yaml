@@ -1,0 +1,34 @@
+# DVC configuration file
+# This file configures DVC for data versioning
+
+stages:
+  prepare_amazon:
+    cmd: python scripts/download_data.py amazon
+    deps:
+      - scripts/download_data.py
+    outs:
+      - data/processed/amazon_reviews.csv:
+          cache: false
+  
+  prepare_sentiment140:
+    cmd: python scripts/download_data.py sentiment140
+    deps:
+      - scripts/download_data.py
+    outs:
+      - data/processed/sentiment140.csv:
+          cache: false
+  
+  train_vectorizers:
+    cmd: python experiments/train.py
+    deps:
+      - data/processed/amazon_reviews.csv
+      - data/processed/sentiment140.csv
+      - src/preprocessing.py
+      - src/vectorizers.py
+    outs:
+      - models/tfidf_vectorizer.pkl
+      - models/bow_vectorizer.pkl
+      - models/word2vec_embedding.model
+    metrics:
+      - metrics/vectorization_results.json:
+          cache: false

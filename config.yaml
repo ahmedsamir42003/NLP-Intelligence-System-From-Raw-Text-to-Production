@@ -1,0 +1,117 @@
+# NLP Intelligence System Configuration
+
+project:
+  name: "NLP-Intelligence-System"
+  version: "1.0.0"
+  description: "End-to-end NLP production system with multiple vectorization methods"
+
+datasets:
+  amazon_reviews:
+    name: "Amazon Fine Food Reviews"
+    url: "https://snap.stanford.edu/data/finefoods.txt.gz"
+    path: "data/raw/amazon_reviews.txt"
+    size: "~242MB"
+    samples: 568454
+  sentiment140:
+    name: "Sentiment140"
+    url: "http://help.sentiment140.appspot.com/files/training.1600000.processed.noemoticon.csv"
+    path: "data/raw/sentiment140.csv"
+    size: "~340MB"
+    samples: 1600000
+
+preprocessing:
+  text_cleaning:
+    lowercase: true
+    remove_urls: true
+    remove_emails: true
+    remove_html: true
+    remove_special_chars: false
+    remove_accents: true
+  
+  tokenization:
+    method: "nltk" 
+    language: "english"
+  
+  normalization:
+    stemming: true
+    lemmatization: true
+    remove_stopwords: true
+    min_token_length: 2
+  
+  text_stats:
+    target_vocab_size: 50000
+    min_word_frequency: 5
+
+vectorization:
+
+  bow:
+    max_features: 50000
+    ngram_range: [1, 2]
+
+  tfidf:
+    max_features: 50000
+    ngram_range: [1, 2]
+    min_df: 5
+    max_df: 0.8
+  
+  bm25:
+    k1: 1.5
+    b: 0.75
+    language: "english"
+  
+  embeddings:
+    type: "word2vec"  
+    dimension: 300
+    window: 5
+    min_count: 5
+    workers: 4
+    epochs: 5
+    sg: 1  
+
+experiments:
+  random_seed: 42
+  test_split: 0.8
+  batch_size: 32
+  max_iterations: 100
+  
+  models:
+    - name: "bow_classifier"
+      vectorizer: "bow"
+      classifier: "logistic_regression"
+    - name: "tfidf_classifier"
+      vectorizer: "tfidf"
+      classifier: "logistic_regression"
+    - name: "bm25_search"
+      vectorizer: "bm25"
+      classifier: null
+    - name: "embedding_classifier"
+      vectorizer: "embeddings"
+      classifier: "logistic_regression"
+
+search_engine:
+  index_type: "bm25"  
+  top_k: 10
+  sentiment_filter: true
+  filter_threshold: 0.5
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  log_level: "info"
+  
+  endpoints:
+    - "/health"
+    - "/predict"
+    - "/search"
+    - "/batch_predict"
+    - "/vectorize"
+
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "nlp_text_vectorization"
+  autolog: true
+
+dvc:
+  remote: "myremote"
+  auto_push: false
