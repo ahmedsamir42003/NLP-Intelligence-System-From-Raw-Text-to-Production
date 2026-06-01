@@ -1,0 +1,15 @@
+schema: '2.0'
+stages:
+  prepare_amazon:
+    cmd: python scripts/download_data.py amazon
+    deps:
+    - path: scripts/download_data.py
+      hash: md5
+      md5: 0a92a594c2d6075c15c6ccdf576533e5
+      size: 6746
+      isexec: true
+    outs:
+    - path: data/processed/amazon_reviews.csv
+      hash: md5
+      md5: 9cd9f83f6589e500af8065ad4f7b2882
+      size: 4207594
