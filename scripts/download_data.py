@@ -49,9 +49,15 @@ def download_amazon_reviews(output_path: str = "data/raw/amazon_reviews.txt.gz")
 
 
 def download_sentiment140(output_path: str = "data/raw/sentiment140.csv.gz") -> bool:
-    url = "http://help.sentiment140.appspot.com/files/training.1600000.processed.noemoticon.csv.gz"
-    logger.info("Downloading Sentiment140...")
-    return download_file(url, output_path)
+    # Primary: HuggingFace mirror (more reliable than original host)
+    url = "https://huggingface.co/datasets/sentiment140/resolve/main/data/train.csv.gz"
+    logger.info("Downloading Sentiment140 from HuggingFace...")
+    if download_file(url, output_path):
+        return True
+    # Fallback: original host
+    url_fallback = "http://help.sentiment140.appspot.com/files/training.1600000.processed.noemoticon.csv.gz"
+    logger.info("Retrying from original host...")
+    return download_file(url_fallback, output_path)
 
 
 def parse_amazon_reviews(file_path: str, max_samples: int = None) -> pd.DataFrame:
@@ -69,7 +75,7 @@ def parse_amazon_reviews(file_path: str, max_samples: int = None) -> pd.DataFram
                 line = line.strip()
 
                 if not line:
-
+                    # Blank line = end of review block
                     if current.get('text') and current.get('rating'):
                         data.append(current)
                         if max_samples and len(data) >= max_samples:
@@ -90,6 +96,8 @@ def parse_amazon_reviews(file_path: str, max_samples: int = None) -> pd.DataFram
                         current['rating'] = int(float(line.split(':', 1)[1].strip()))
                     except ValueError:
                         pass
+
+            # Catch last block if file doesn't end with blank line
             if current.get('text') and current.get('rating'):
                 data.append(current)
 
@@ -109,7 +117,7 @@ def parse_sentiment140(file_path: str, max_samples: int = None) -> pd.DataFrame:
     try:
         open_func = gzip.open if file_path.endswith('.gz') else open
         with open_func(file_path, 'rt', encoding='utf-8', errors='ignore') as f:
-            reader = csv.reader(f, quoting=csv.QUOTE_NONE, quotechar='')
+            reader = csv.reader(f, quoting=csv.QUOTE_NONE, escapechar='\\')
 
             for idx, row in enumerate(reader):
                 if max_samples and idx >= max_samples:
@@ -156,10 +164,12 @@ def prepare_amazon_reviews(raw_path: str, processed_path: str, max_samples: int 
     processed_path = Path(processed_path)
     processed_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Save full version with all columns
     full_path = processed_path.parent / f"{processed_path.stem}_full.csv"
     df.to_csv(full_path, index=False)
     logger.info(f"Saved full version to {full_path}")
 
+    # Save slim version with just text and sentiment
     df[['text', 'sentiment']].to_csv(processed_path, index=False)
     logger.info(f"Saved to {processed_path}")
 
@@ -182,10 +192,12 @@ def prepare_sentiment140(raw_path: str, processed_path: str, max_samples: int = 
     processed_path = Path(processed_path)
     processed_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Save full version with all columns
     full_path = processed_path.parent / f"{processed_path.stem}_full.csv"
     df.to_csv(full_path, index=False)
     logger.info(f"Saved full version to {full_path}")
 
+    # Save slim version with just text and sentiment
     df[['text', 'sentiment']].to_csv(processed_path, index=False)
     logger.info(f"Saved to {processed_path}")
 
